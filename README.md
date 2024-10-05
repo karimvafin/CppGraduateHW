@@ -3,6 +3,8 @@
 ## 1. Cache
 Building project:
 ```
+git submodule init
+git submodule update
 cd cache
 cmake -S . -B build
 cd build
@@ -13,7 +15,9 @@ Running tests:
 ./tests/run_nameOfTest
 ```
 Avalable tests:
+
 ***test_end2end*** -- the main end to end test that compares LRU, ARC and Ideal caches
+
 ***test_cacheARC*** -- test for ARC cache with data visualizing
 
 Tests take a sequence of integers as an input. The first number -- cache size, the second number -- number of pages, and then ids of pages. Example:
