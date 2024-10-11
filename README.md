@@ -16,12 +16,14 @@ Running tests:
 ```
 Avalable tests:
 
-***test_end2end*** -- the main end to end test that compares LRU, ARC and Ideal caches
+***test_cacheIdeal*** -- test for ideal cache
 
-***test_cacheARC*** -- test for ARC cache with data visualizing
+***test_cacheLRU*** -- test for LRU cache
+
+***test_cacheARC*** -- test for ARC cache
 
 Tests take a sequence of integers as an input. The first number -- cache size, the second number -- number of pages, and then ids of pages. Example:
 ```
-$ ./tests/run_test_end2end
+$ ./tests/run_test_cacheARC
 4 5 1 2 3 1 2
 ```
