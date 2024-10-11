@@ -3,6 +3,7 @@
 
 #include <list>
 #include <unordered_map>
+#include <iostream>
 
 namespace Cache {
 
@@ -12,7 +13,8 @@ private:
     using ListIt = typename std::list<T>::iterator;
     using HashIt = typename std::unordered_map<KeyT, ListIt>::iterator;
 
-    const size_t size_;
+    size_t sizeB1_;
+    size_t sizeB2_;
     size_t sizeT1_;
     size_t sizeT2_;
     std::list<T> T1_;
@@ -39,7 +41,28 @@ public:
 };
 
 template <typename T, typename KeyT>
-CacheARC<T, KeyT>::CacheARC(size_t size) : size_(size), sizeT1_(size), sizeT2_(size) {}
+CacheARC<T, KeyT>::CacheARC(size_t size) {
+    sizeT1_ = 0;
+    sizeT2_ = 0;
+    sizeB1_ = 0;
+    sizeB2_ = 0;
+    while (size != 0) {
+        sizeT1_++;
+        size--;
+        if (size != 0) {
+            sizeT2_++;
+            size--;
+        }
+        if (size != 0) {
+            sizeB1_++;
+            size--;
+        }
+        if (size != 0) {
+            sizeB2_++;
+            size--;
+        }
+    }
+}
 
 template <typename T, typename KeyT>
 template <typename F>
@@ -72,7 +95,7 @@ bool CacheARC<T, KeyT>::lookupUpdate(KeyT key, F getPageSlow) {
         hashT1_.erase(hashT1_.find(moveKey));
         B1_.splice(B1_.begin(), T1_, std::prev(T1_.end()), T1_.end());
         hashB1_[moveKey] = B1_.begin();
-        if (B1_.size() > size_) {
+        if (B1_.size() > sizeB1_) {
             hashB1_.erase(hashB1_.find(B1_.back().getId()));
             B1_.pop_back();
         }
@@ -97,7 +120,7 @@ void CacheARC<T, KeyT>::moveToT2(HashIt hit) {
         B2_.splice(B2_.begin(), T2_, std::prev(T2_.end()), T2_.end());
         hashB2_[B2_.begin()->getId()] = B2_.begin();
     }
-    if (B2_.size() > size_) {
+    if (B2_.size() > sizeB2_) {
         hashB2_.erase(hashB2_.find(B2_.back().getId()));
         B2_.pop_back();
     }
@@ -108,11 +131,11 @@ void CacheARC<T, KeyT>::moveFromB1(HashIt hit) {
     T1_.splice(T1_.begin(), B1_, hit->second, std::next(hit->second));
     hashT1_[hit->first] = T1_.begin();
     hashB1_.erase(hit);
-    if (T1_.size() == 2 * size_) {
+    if (T1_.size() == (sizeT1_ + sizeT2_)) {
         hashT1_.erase(hashT1_.find(T1_.back().getId()));
         B1_.splice(B1_.begin(), T1_, std::prev(T1_.end()), T1_.end());
         hashB1_[B1_.front().getId()] = B1_.begin();
-        if (B1_.size() > size_) {
+        if (B1_.size() > sizeB1_) {
             hashB1_.erase(hashB1_.find(B1_.back().getId()));
             B1_.pop_back();
         }
@@ -124,7 +147,7 @@ void CacheARC<T, KeyT>::moveFromB1(HashIt hit) {
             hashT2_.erase(hashT2_.find(T2_.back().getId()));
             B2_.splice(B2_.begin(), T2_, std::prev(T2_.end()), T2_.end());
             hashB2_[B2_.front().getId()] = B2_.begin();
-            if (B2_.size() > size_) {
+            if (B2_.size() > sizeB2_) {
                 hashB2_.erase(hashB2_.find(B2_.back().getId()));
                 B2_.pop_back();
             }
@@ -138,11 +161,11 @@ void CacheARC<T, KeyT>::moveFromB2(HashIt hit) {
     T2_.splice(T2_.begin(), B2_, hit->second, std::next(hit->second));
     hashT2_[hit->first] = T2_.begin();
     hashB2_.erase(hit);
-    if (T2_.size() == 2 * size_) {
+    if (T2_.size() == (sizeT1_ + sizeT2_)) {
         hashT2_.erase(hashT2_.find(T2_.back().getId()));
         B2_.splice(B2_.begin(), T2_, std::prev(T2_.end()), T2_.end());
         hashB2_[B2_.front().getId()] = B2_.begin();
-        if (B2_.size() > size_) {
+        if (B2_.size() > sizeB2_) {
             hashB2_.erase(hashB2_.find(B2_.back().getId()));
             B2_.pop_back();
         }
@@ -154,7 +177,7 @@ void CacheARC<T, KeyT>::moveFromB2(HashIt hit) {
             hashT1_.erase(hashT1_.find(T1_.back().getId()));
             B1_.splice(B1_.begin(), T1_, std::prev(T1_.end()), T1_.end());
             hashB1_[B1_.front().getId()] = B1_.begin();
-            if (B1_.size() > size_) {
+            if (B1_.size() > sizeB1_) {
                 hashB1_.erase(hashB1_.find(B1_.back().getId()));
                 B1_.pop_back();
             }
@@ -164,7 +187,7 @@ void CacheARC<T, KeyT>::moveFromB2(HashIt hit) {
 
 template <typename T, typename KeyT>
 void CacheARC<T, KeyT>::print() const {
-    for (size_t i = 0; i < (size_ - B1_.size()); ++i) {
+    for (size_t i = 0; i < (sizeB1_ - B1_.size()); ++i) {
         std::cout << ". ";
     }
     for (auto it = B1_.rbegin(), itEnd = B1_.rend(); it != itEnd; ++it) {
@@ -188,7 +211,7 @@ void CacheARC<T, KeyT>::print() const {
     for (auto it = B2_.begin(), itEnd = B2_.end(); it != itEnd; ++it) {
         std::cout << it->getId() << " ";
     }
-    for (size_t i = 0; i < (size_ - B2_.size()); ++i) {
+    for (size_t i = 0; i < (sizeB2_ - B2_.size()); ++i) {
         std::cout << ". ";
     }
     std::cout << std::endl;
