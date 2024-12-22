@@ -1,4 +1,4 @@
-# Cpp Graduate Homeworks
+# Konstantin Vladimirov (MIPT C++) Homework
 
 ## 1. Cache
 Building project:
